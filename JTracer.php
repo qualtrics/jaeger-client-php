@@ -19,6 +19,7 @@ use Shared\Libraries\Jaeger\Thrift\Process;
 use Shared\Libraries\Jaeger\Thrift\Span;
 use Shared\Libraries\Jaeger\Thrift\Tag;
 use Shared\Libraries\Jaeger\Thrift\TagType;
+use Shared\Libraries\Jaeger\Thrift\Zipkin;
 
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Serializer\TBinarySerializer;
@@ -76,6 +77,133 @@ final class JTracer implements Tracer
 
     public function reportSpan($span)
     {
+        $this->reportZipkinSpan($span);
+    }
+
+    public function reportZipkinSpan($span)
+    {
+        $thriftSpan = $span->thriftify();
+        $this->spans[] = $thriftSpan;
+
+        Log::silence();
+        Log::debug("Reporting finished span", $thriftSpan);
+        Log::silence(false);
+
+        $endpoint = new Zipkin\Endpoint(array(
+            "ipv4" => 167918715,
+            "port" => 0,
+            "service_name" => "monolith",
+            "ipv6" => "",
+        ));
+
+        $annotations = array(
+            new Zipkin\Annotation(array(
+                "timestamp" => $span->timestamp,
+                "value" => "sr",
+                "host" => $endpoint,
+            )),
+            new Zipkin\Annotation(array(
+                "timestamp" => $span->timestamp + $span->duration,
+                "value" => "sr",
+                "host" => $endpoint,
+            )),
+        );
+
+        // add each log to the annotations
+        foreach ($span->logs as $key => $value)
+        {
+            // TODO(tylerc)
+        }
+
+        // collect binary annotations
+        $binary_annotations = array(
+            new Zipkin\BinaryAnnotation(array(
+                "key" => "is_test",
+                "value" => true,
+                "annotation_type" => Zipkin\AnnotationType::BOOL,
+                "host" => $endpoint,
+            )),
+            new Zipkin\BinaryAnnotation(array(
+                "key" => "php.version",
+                "value" => phpversion(),
+                "annotation_type" => Zipkin\AnnotationType::STRING,
+                "host" => $endpoint,
+            )),
+            new Zipkin\BinaryAnnotation(array(
+                "key" => "php.pid",
+                "value" => getmypid(),
+                "annotation_type" => Zipkin\AnnotationType::I64,
+                "host" => $endpoint,
+            )),
+            new Zipkin\BinaryAnnotation(array(
+                "key" => "hostname",
+                "value" => hostname(),
+                "annotation_type" => Zipkin\AnnotationType::STRING,
+                "host" => $endpoint,
+            )),
+        );
+        foreach ($span->tags as $key => $tag)
+        {
+            switch ($tag->vType)
+            {
+                case TagType::STRING:
+                    $binary_annotations[] = new Zipkin\BinaryAnnotation(array(
+                        "key" => $tag->key,
+                        "value" => $tag->vStr,
+                        "annotation_type" => Zipkin\AnnotationType::STRING,
+                        "host" => $endpoint,
+                    ));
+                    break;
+
+                case TagType::BOOL:
+                    $binary_annotations[] = new Zipkin\BinaryAnnotation(array(
+                        "key" => $tag->key,
+                        "value" => $tag->vBool,
+                        "annotation_type" => Zipkin\AnnotationType::BOOL,
+                        "host" => $endpoint,
+                    ));
+                    break;
+
+                case TagType::BINARY:
+                    $binary_annotations[] = new Zipkin\BinaryAnnotation(array(
+                        "key" => $tag->key,
+                        "value" => $tag->vBinary,
+                        "annotation_type" => Zipkin\AnnotationType::BYTES,
+                        "host" => $endpoint,
+                    ));
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        $batch = array(
+            new Zipkin\Span(array(
+                "trace_id" => $span->traceIdLow,
+                "name" => $span->operationName,
+                "id" => $span->spanId,
+                "parent_id" => $span->parentSpanId,
+                "annotations" => array(),
+                "binary_annotations" => array(),
+                "debug" => false,
+                "timestamp" => $span->startTime,
+                "duration" => $span->duration,
+                "trace_id_high" => $span->traceIdHigh,
+            )),
+        );
+
+        $transport = new TUDPTransport("10.4.4.144", "5775");
+
+        $p = new TCompactProtocol($transport);
+        $client = new AgentClient($p, $p);
+
+        // emit a batch
+        $client->emitZipkinBatch($batch);
+    }
+
+    public function reportJaegerSpan($span)
+    {
         $thriftSpan = $span->thriftify();
         $this->spans[] = $thriftSpan;
 
@@ -116,8 +244,8 @@ final class JTracer implements Tracer
                 ),
             ));
 
-            $serializer = new TBinarySerializer();
-            $bytes = $serializer->serialize($batch);
+            // $serializer = new TBinarySerializer();
+            // $bytes = $serializer->serialize($batch);
 
             $transport = new TUDPTransport("10.4.4.144", "6831");
 
@@ -127,10 +255,5 @@ final class JTracer implements Tracer
             // emit a batch
             $client->emitBatch($batch);
 
-    }
-
-    public static function sortthem($a, $b)
-    {
-        return ($a->startTime < $b->startTime) ? -1 : 1;
     }
 }
