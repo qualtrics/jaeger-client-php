@@ -10,29 +10,41 @@ final class JSpanContext implements SpanContext
     const IS_DEBUG = 2;
 
     private $traceIdLow;
-    // private $traceIdHigh;
+    private $traceIdHigh = null;
     private $spanId;
-    private $parentId;
+    private $parentId = null;
 
     private $flags = 0;
 
-    public static function create($traceId = 0, $parentId = 0)
+    public static function create($traceId = null, $parentId = null)
     {
         return new self($traceId, $parentId);
     }
 
     private function __construct($traceId, $parentId)
     {
-        $this->traceIdLow = rand();
-        // $this->traceIdHigh = rand();
+        // span id is always some random number
         $this->spanId = rand();
 
-        if ($traceId > 0)
+        // set the trace id
+        if (is_integer($traceId))
         {
             $this->traceIdLow = $traceId;
+            $this->traceIdHigh = null;
+        }
+        else if (is_array($traceId) && is_integer($traceId['low']) && is_integer($traceId['high']))
+        {
+            $this->traceIdLow = $traceId['low'];
+            $this->traceIdHigh = $traceId['high'];
+        }
+        else
+        {
+            $this->traceIdLow = rand();
+            $this->traceIdHigh = rand();
         }
 
-        if ($parentId > 0)
+        // a trace MAY have a parent, but might not
+        if (is_integer($parentId))
         {
             $this->parentId = $parentId;
         }
@@ -57,10 +69,16 @@ final class JSpanContext implements SpanContext
 
     public function getTraceID()
     {
-        // return array(
-        //     $this->traceIdHigh,
-        //     $this->traceIdLow
-        // );
+        if (is_numeric($this->traceIdHigh))
+        {
+            error_log("Returning a two-part trace ID: " . $this->traceIdLow . " / " . $this->traceIdHigh);
+            return array(
+                "low" => $this->traceIdLow,
+                "high" => $this->traceIdHigh,
+            );
+        }
+
+        error_log("Returning a one-part trace ID: " . $this->traceIdLow);
         return $this->traceIdLow;
     }
 
@@ -84,6 +102,10 @@ final class JSpanContext implements SpanContext
         if ($sampled)
         {
             $this->flags |= self::IS_SAMPLED;
+        }
+        else
+        {
+            // this case not supported, since you shouldn't ever be "un-sampling" a span
         }
     }
 
