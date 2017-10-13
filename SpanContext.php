@@ -2,9 +2,9 @@
 
 namespace Shared\Libraries\Jaeger;
 
-use OpenTracing\SpanContext;
+use OpenTracing\SpanContext as OTSpanContext;
 
-final class JSpanContext implements SpanContext
+final class SpanContext implements OTSpanContext
 {
     const IS_SAMPLED = 1;
     const IS_DEBUG = 2;

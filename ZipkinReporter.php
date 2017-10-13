@@ -2,171 +2,57 @@
 
 namespace Shared\Libraries\Jaeger;
 
-use OpenTracing\Reference;
-use OpenTracing\Span;
-use OpenTracing\SpanOptions;
-use Shared\Libraries\Jaeger\JSpanContext;
-use Shared\Libraries\Jaeger\Thrift;
+use Shared\Libraries\Jaeger\Thrift\AgentClient;
 use Shared\Libraries\Jaeger\Thrift\Zipkin;
-use Shared\Libraries\Log;
+use Thrift\Protocol\TCompactProtocol;
 
-final class JSpan implements Span
+final class ZipkinReporter implements Reporter
 {
-    private $tracer;
-    private $context;
-    private $operationName;
-    private $startTime = 0;
-    private $duration = 0;
-    private $tags = null;
-    private $logs = null;
-    private $references = [];
+	private $transport;
+	private $client;
 
-    public static function create($tracer, $operationName, $options)
+	function __construct($address = "127.0.0.1", $port = 5775)
+	{
+		$this->transport = new TUDPTransport($address, $port);
+        $p = new TCompactProtocol($this->transport);
+        $this->client = new AgentClient($p, $p);
+	}
+
+    /**
+    * Submits a new span to collectors, possibly delayed and/or with buffering.
+    *
+    * @param Span $span
+    */
+    public function reportSpan(Span $span)
     {
-        return new self($tracer, $operationName, $options);
-    }
+		// TODO(tylerc): Buffer spans and send them as they accumulate; send the remainder in flush().
 
-    private function __construct($tracer, $operationName, SpanOptions $options = null)
-    {
-        $this->tracer = $tracer;
-        $this->operationName = $operationName;
+    	error_log("@ORANGE Saving a span: " . $span->getContext()->getSpanID());
 
-        if ($options != null)
-        {
-            $this->startTime = $options->getStartTime();
-            $this->references = $options->getReferences();
-            $this->tags = $options->getTags();
-        }
+        // identify ourself
+        $endpoint = new Zipkin\Endpoint(array(
+            "ipv4" => 167918715,
+            "port" => 0,
+            "service_name" => "monolith",
+            "ipv6" => "",
+        ));
 
-        if (empty($this->startTime))
-        {
-            $this->startTime = microtime(true);
-        }
-
-        // if we have a parent, be its child
-        $traceId = null;
-        $parentId = null;
-        foreach ($this->references as $ref)
-        {
-            if ($ref->isType(Reference::CHILD_OF))
-            {
-                if ($parentId != null)
-                {
-                    throw new \Exception("can't be a child of two things");
-                }
-                $traceId = $ref->getContext()->getTraceID();
-                $parentId = $ref->getContext()->getSpanID();
-            }
-        }
-        $this->context = JSpanContext::create($traceId, $parentId);
+        // emit a batch
+        $this->client->emitZipkinBatch([
+            $this->encode($span, $endpoint),
+        ]);
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function getOperationName()
+    * Does a clean shutdown of the reporter, flushing any traces that may be
+    * buffered in memory.
+    */
+    public function close()
     {
-        return $this->operationName;
+    	$this->transport->close();
     }
 
-    public function setContext($ctx)
-    {
-        $this->context = $ctx;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getContext()
-    {
-        return $this->context;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function finish($finishTime = null, array $logRecords = [])
-    {
-        // mark the duration
-        $this->duration = microtime(true) - $this->startTime;
-
-        // report ourselves to the Tracer
-        $this->tracer->reportSpan($this);
-    }
-
-    public function overwriteOperationName($newOperationName)
-    {
-        error_log("@GREEN Naming span: {$newOperationName}");
-        $this->operation = $newOperationName;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setTags(array $tags)
-    {
-        foreach ($tags as $key => $value)
-        {
-            if (!is_string($key))
-            {
-                throw new \Exception("tag key not a string");
-            }
-
-            if (!(is_string($value) || is_bool($value) || is_numeric($value)))
-            {
-                throw new \Exception("invalid tag value type");
-            }
-
-            $this->tags[$key] = $value;
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function log(array $fields = [], $timestamp = null)
-    {
-        if ($timestamp == null)
-        {
-            $timestamp = microtime(true) * 1000000;
-        }
-
-        foreach ($fields as $key => $value)
-        {
-            if (!is_string($key))
-            {
-                throw new \Exception("log field not a string");
-            }
-
-            if (!(is_string($value) || is_bool($value) || is_numeric($value)))
-            {
-                throw new \Exception("invalid log value type");
-            }
-        }
-
-        $this->logs[] = array(
-            "timestamp" => $timestamp,
-            "fields" => $fields,
-        );
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function addBaggageItem($key, $value)
-    {
-        throw new \Exception("not implemented");
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getBaggageItem($key)
-    {
-        return null;
-    }
-
-    private function binaryEncode($type, $value)
+    public function binaryEncode($type, $value)
     {
         switch ($type)
         {
@@ -183,35 +69,27 @@ final class JSpan implements Span
                 return pack('J', $value);
 
             case Zipkin\AnnotationType::DOUBLE:
-
-                if (version_compare(PHP_VERSION, "7.0.15") >= 0)
-                {
+                if (version_compare(PHP_VERSION, "7.0.15") >= 0) {
                     return pack('E', $value);
-                }
-                else
-                {
+                } else {
                     // encode in native endianness
                     $enc = pack('d', $value);
 
-                    // determine our own endianness
-                    $littleEndian = (base64_encode(pack('d', 3.1415)) == "bxKDwMohCUA=");
-                    if ($littleEndian)
-                    {
-                        // reverse the bits
+                    // if we have a little-endian system, reverse the bytes
+                    if (pack('S', 1) == "\x01\x00") {
                         $enc = strrev($enc);
                     }
 
                     return $enc;
-
                 }
         }
     }
 
-    public function zipkinify($endpoint)
+    public function encode(Span $span, $endpoint)
     {
 
-        $startTime = (int) ($this->startTime * 1000000); // microseconds
-        $duration = (int) ($this->duration * 1000000); // microseconds
+        $startTime = (int) ($span->getStartTime() * 1000000); // microseconds
+        $duration = (int) ($span->getDuration() * 1000000); // microseconds
 
         $annotations = array(
             new Zipkin\Annotation(array(
@@ -227,11 +105,10 @@ final class JSpan implements Span
         );
 
         // add each log to the annotations
-        if (is_array($this->logs))
+        if (is_array($span->getLogs()))
         {
-            foreach ($this->logs as $key => $value)
+            foreach ($span->getLogs() as $key => $value)
             {
-                // TODO(tylerc)
                 $annotations[] = new Zipkin\Annotation(array(
                     "timestamp" => $value["timestamp"],
                     "value" => json_encode($value["fields"]),
@@ -305,7 +182,7 @@ final class JSpan implements Span
         );
 
 
-        foreach ($this->tags as $key => $value)
+        foreach ($span->getTags() as $key => $value)
         {
             if (is_bool($value))
             {
@@ -345,13 +222,13 @@ final class JSpan implements Span
             }
         }
 
-        $traceId = $this->getContext()->getTraceID();
+        $traceId = $span->getContext()->getTraceID();
 
         return new Zipkin\Span(array(
             "trace_id" => (is_array($traceId) ? $traceId["low"] : $traceId),
-            "name" => $this->operationName,
-            "id" => $this->getContext()->getSpanID(),
-            "parent_id" => $this->getContext()->getParentID(),
+            "name" => $span->getOperationName(),
+            "id" => $span->getContext()->getSpanID(),
+            "parent_id" => $span->getContext()->getParentID(),
             "annotations" => $annotations,
             "binary_annotations" => $binary_annotations,
             "debug" => false,
@@ -361,4 +238,5 @@ final class JSpan implements Span
         ));
 
     }
+
 }

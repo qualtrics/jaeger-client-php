@@ -13,7 +13,7 @@ class TUDPTransport extends TTransport
 	protected $port;
 
 	protected $socket = NULL;
-	protected $buffer;
+	protected $buffer = "";
 
 	// this implements a TTransport over UDP
 	function __construct($server, $port)
@@ -71,6 +71,9 @@ class TUDPTransport extends TTransport
 
 	public function flush()
 	{
+		// TODO(tylerc): This assumes that the whole buffer successfully sent... I believe
+		// that this should always be the case for UDP packets, but I could be wrong.
+
 		// flush the buffer to the socket
 		if (!socket_sendto($this->socket, $this->buffer, strlen($this->buffer), 0, $this->server, $this->port))
 		{
@@ -80,7 +83,10 @@ class TUDPTransport extends TTransport
 			die("Could not send data: [$errorcode] $errormsg \n");
 			return new TTransportException("Data does not fit within one UDP packet", TTransportException::UNKNOWN);
 		}
-
+		else
+		{
+			$this->buffer = ""; // empty the buffer
+		}
 	}
 
 }
