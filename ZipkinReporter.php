@@ -85,7 +85,6 @@ final class ZipkinReporter implements Reporter
 
     public function encode(Span $span, $endpoint)
     {
-
         $startTime = (int) ($span->getStartTime() * 1000000); // microseconds
         $duration = (int) ($span->getDuration() * 1000000); // microseconds
 
@@ -116,70 +115,7 @@ final class ZipkinReporter implements Reporter
         }
 
         // collect binary annotations
-        $binary_annotations = array(
-            // new Zipkin\BinaryAnnotation(array(
-            //     "key" => "is_test",
-            //     "value" => true,
-            //     "annotation_type" => Zipkin\AnnotationType::BOOL,
-            //     "host" => $endpoint,
-            // )),
-            // new Zipkin\BinaryAnnotation(array(
-            //     "key" => "random_bytes",
-            //     "value" => "some bytes go here",
-            //     "annotation_type" => Zipkin\AnnotationType::BYTES,
-            //     "host" => $endpoint,
-            // )),
-            // new Zipkin\BinaryAnnotation(array(
-            //     "key" => "some_int16",
-            //     "value" => $this->binaryEncode(Zipkin\AnnotationType::I16, 42),
-            //     "annotation_type" => Zipkin\AnnotationType::I16,
-            //     "host" => $endpoint,
-            // )),
-            // new Zipkin\BinaryAnnotation(array(
-            //     "key" => "some_int32",
-            //     "value" => $this->binaryEncode(Zipkin\AnnotationType::I32, 42),
-            //     "annotation_type" => Zipkin\AnnotationType::I32,
-            //     "host" => $endpoint,
-            // )),
-            // new Zipkin\BinaryAnnotation(array(
-            //     "key" => "some_int64",
-            //     "value" => $this->binaryEncode(Zipkin\AnnotationType::I64, 42),
-            //     "annotation_type" => Zipkin\AnnotationType::I64,
-            //     "host" => $endpoint,
-            // )),
-            // new Zipkin\BinaryAnnotation(array(
-            //     "key" => "a_double",
-            //     "value" => $this->binaryEncode(Zipkin\AnnotationType::DOUBLE, 3.14159265),
-            //     "annotation_type" => Zipkin\AnnotationType::DOUBLE,
-            //     "host" => $endpoint,
-            // )),
-            new Zipkin\BinaryAnnotation(array(
-                "key" => "php.version",
-                "value" => phpversion(),
-                "annotation_type" => Zipkin\AnnotationType::STRING,
-                "host" => $endpoint,
-            )),
-            new Zipkin\BinaryAnnotation(array(
-                "key" => "php.pid",
-                "value" => $this->binaryEncode(Zipkin\AnnotationType::I16, getmypid()),
-                "annotation_type" => Zipkin\AnnotationType::I16,
-                "host" => $endpoint,
-            )),
-            new Zipkin\BinaryAnnotation(array(
-                "key" => "jaeger.hostname",
-                "value" => gethostname(),
-                "annotation_type" => Zipkin\AnnotationType::STRING,
-                "host" => $endpoint,
-            )),
-            new Zipkin\BinaryAnnotation(array(
-                "key" => "jaeger.version",
-                "value" => "jaeger-php-qualtrics",
-                "annotation_type" => Zipkin\AnnotationType::STRING,
-                "host" => $endpoint,
-            )),
-        );
-
-
+        $binary_annotations = [];
         foreach ($span->getTags() as $key => $value)
         {
             if (is_bool($value))
