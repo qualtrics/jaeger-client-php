@@ -17,8 +17,8 @@ final class Span implements OTSpan
     private $operationName;
     private $startTime = 0;
     private $duration = 0;
-    private $tags = null;
-    private $logs = null;
+    private $tags = [];
+    private $logs = [];
     private $references = [];
 
     public static function create($tracer, $operationName, $options)
@@ -183,6 +183,11 @@ final class Span implements OTSpan
     public function getTags()
     {
         return $this->tags;
+    }
+
+    public function getReferences()
+    {
+        return $this->references;
     }
 
 }

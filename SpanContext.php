@@ -48,6 +48,8 @@ final class SpanContext implements OTSpanContext
         {
             $this->parentId = $parentId;
         }
+
+        error_log("Generated trace: " . $this->traceIdHigh . "-" . $this->traceIdLow);
     }
 
     public function getIterator()
@@ -67,6 +69,15 @@ final class SpanContext implements OTSpanContext
 
     // ---
 
+    public function __toString()
+    {
+        if (is_numeric($this->traceIdHigh))
+        {
+            return sprintf("%x%016x:%x:%x:%x", $this->traceIdHigh, $this->traceIdLow, $this->spanId, $this->parentId, $this->flags);
+        }
+        return sprintf("%x:%x:%x:%x", $this->traceIdLow, $this->spanId, $this->parentId, $this->flags);
+    }
+
     public function getTraceID()
     {
         if (is_numeric($this->traceIdHigh))
@@ -78,6 +89,15 @@ final class SpanContext implements OTSpanContext
         }
 
         return $this->traceIdLow;
+    }
+
+    public function getTraceIDHex()
+    {
+        if (is_numeric($this->traceIdHigh))
+        {
+            return sprintf("%x%016x", $this->traceIdHigh, $this->traceIdLow);
+        }
+        return sprintf("%x", $this->traceIdLow);
     }
 
     public function getFlags()
