@@ -15,15 +15,18 @@ final class Tracer implements OTTracer
     const SAMPLER = "Sampler";
     const REPORTER = "Reporter";
 
-    private $sampler;
-    private $reporter;
+    private $sampler = null;
+    private $reporter = null;
 
-    private $spans;
+    private $spans = [];
 
     public static function create($options)
     {
         $tracer = new self();
-        $tracer->spans = [];
+
+        // configure with defaults
+        $tracer->sampler = new AlwaysSampler();
+        $tracer->reporter = new NullReporter();
 
         foreach ($options as $key => $value)
         {

@@ -27,8 +27,6 @@ final class ZipkinReporter implements Reporter
     {
 		// TODO(tylerc): Buffer spans and send them as they accumulate; send the remainder in flush().
 
-    	error_log("@ORANGE Saving a span: " . $span->getContext()->getSpanID());
-
         // identify ourself
         $endpoint = new Zipkin\Endpoint(array(
             "ipv4" => 167918715,

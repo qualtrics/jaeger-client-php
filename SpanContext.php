@@ -71,14 +71,12 @@ final class SpanContext implements OTSpanContext
     {
         if (is_numeric($this->traceIdHigh))
         {
-            error_log("Returning a two-part trace ID: " . $this->traceIdLow . " / " . $this->traceIdHigh);
             return array(
                 "low" => $this->traceIdLow,
                 "high" => $this->traceIdHigh,
             );
         }
 
-        error_log("Returning a one-part trace ID: " . $this->traceIdLow);
         return $this->traceIdLow;
     }
 

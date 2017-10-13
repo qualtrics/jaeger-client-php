@@ -59,9 +59,6 @@ final class Span implements OTSpan
             }
         }
         $this->context = SpanContext::create($traceId, $parentId);
-
-        error_log("@GREEN Made a new span: " . $this->context->getSpanID());
-
     }
 
     /**
@@ -90,8 +87,6 @@ final class Span implements OTSpan
      */
     public function finish($finishTime = null, array $logRecords = [])
     {
-        error_log("@BLUE Finishing span: " . $this->getContext()->getSpanID());
-
         // mark the duration
         $this->duration = microtime(true) - $this->startTime;
 
