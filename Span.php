@@ -111,8 +111,9 @@ final class Span implements OTSpan
                 throw new \Exception("tag key not a string");
             }
 
-            if (!(is_string($value) || is_bool($value) || is_numeric($value)))
+            if (!(is_string($value) || is_bool($value) || is_numeric($value) || is_null($value)))
             {
+                error_log("Type of " . $key . " is " . gettype($value));
                 throw new \Exception("invalid tag value type");
             }
 
@@ -163,6 +164,11 @@ final class Span implements OTSpan
     public function getBaggageItem($key)
     {
         return null;
+    }
+
+    public function getTracer()
+    {
+        return $this->tracer;
     }
 
     public function getStartTime()

@@ -24,7 +24,7 @@ final class SpanContext implements OTSpanContext
     private function __construct($traceId, $parentId)
     {
         // span id is always some random number
-        $this->spanId = rand();
+        $this->spanId = mt_rand() << 32 | mt_rand();
 
         // set the trace id
         if (is_integer($traceId))
@@ -39,8 +39,8 @@ final class SpanContext implements OTSpanContext
         }
         else
         {
-            $this->traceIdLow = rand();
-            $this->traceIdHigh = rand();
+            $this->traceIdLow = mt_rand() << 32 | mt_rand();
+            $this->traceIdHigh = mt_rand() << 32 | mt_rand();
         }
 
         // a trace MAY have a parent, but might not
@@ -49,7 +49,7 @@ final class SpanContext implements OTSpanContext
             $this->parentId = $parentId;
         }
 
-        error_log("Generated trace: " . $this->traceIdHigh . "-" . $this->traceIdLow);
+        // error_log("Generated trace: " . $this->traceIdHigh . "-" . $this->traceIdLow);
     }
 
     public function getIterator()

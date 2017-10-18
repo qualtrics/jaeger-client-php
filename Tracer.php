@@ -16,25 +16,29 @@ final class Tracer implements OTTracer
     const REPORTER = "Reporter";
     const TAGS = "Tags";
 
+    private $serviceName = null;
+
     private $sampler = null;
     private $reporter = null;
 
     // Tracer-level tags
     private $tags = [];
 
-    public static function create($options)
+    public static function create($serviceName, $options)
     {
         $tracer = new self();
 
         // configure with defaults
+        $tracer->serviceName = $serviceName;
         $tracer->sampler = new AlwaysSampler();
         $tracer->reporter = new NullReporter();
 
         // add standard tracer-level tags
+        $tracer->tags["hostname"] = gethostname();
+        $tracer->tags["ip"] = $_SERVER['SERVER_ADDR'] . ":" . $_SERVER['SERVER_PORT'];
         $tracer->tags["php.version"] = PHP_VERSION;
         $tracer->tags["php.pid"] = getmypid();
         $tracer->tags["jaeger.version"] = "jaeger-php-qualtrics";
-        $tracer->tags["jaeger.hostname"] = gethostname();
 
         foreach ($options as $key => $value)
         {
@@ -90,12 +94,17 @@ final class Tracer implements OTTracer
 
     public function reportSpan($span)
     {
-        // append the tracer-level tags UNDERNEATH the existing ones
-        $spanTags = $span->getTags();
-        $span->setTags($this->tags);
-        $span->setTags($spanTags); // re-write the span tags to override any tracer-level tags
-
         $this->reporter->reportSpan($span);
+    }
+
+    public function getServiceName()
+    {
+        return $this->serviceName;
+    }
+
+    public function getTags()
+    {
+        return $this->tags;
     }
 
 }

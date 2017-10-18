@@ -38,14 +38,8 @@ final class JaegerReporter implements Reporter
         // emit a batch
         $this->client->emitBatch(new Batch([
             "process" => new Process([
-                "serviceName" => "monolith",
-                "tags" => [
-                    $this->buildTag("jaeger.version", "jaeger-php-qualtrics"),
-                    $this->buildTag("hostname", gethostname()),
-                    $this->buildTag("ip", "1.2.3.4"),
-                    $this->buildTag("rich", true),
-                    $this->buildTag("riches", 99),
-                ],
+                "serviceName" => $span->getTracer()->getServiceName(),
+                "tags" => $this->buildTags($span->getTracer()->getTags()),
             ]),
             "spans" => [
                 $this->encode($span),
@@ -135,6 +129,22 @@ final class JaegerReporter implements Reporter
                 "vBool" => $value,
             ]);
         }
+        else if (is_string($value))
+        {
+            return new Tag([
+                "key" => $key,
+                "vType" => TagType::STRING,
+                "vStr" => $value,
+            ]);
+        }
+        else if (is_null($value))
+        {
+            return new Tag([
+                "key" => $key,
+                "vType" => TagType::STRING,
+                "vStr" => "",
+            ]);
+        }
         else if (is_integer($value))
         {
             return new Tag([
@@ -151,15 +161,8 @@ final class JaegerReporter implements Reporter
                 "vDouble" => $value,
             ]);
         }
-        else if (is_string($value))
-        {
-            return new Tag([
-                "key" => $key,
-                "vType" => TagType::STRING,
-                "vStr" => $value,
-            ]);
-        }
 
+        error_log("Cannot build tag for " . $key . " of type " . gettype($value));
         throw new \Exception("unsupported tag type");
     }
 
