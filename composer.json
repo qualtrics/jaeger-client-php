@@ -1,5 +1,5 @@
 {
-    "name": "mdrt/Jaeger",
+    "name": "mdrt/jaeger",
     "description": "Jaeger bindings for the PHP OpenTracing API",
     "type": "library",
     "license": "Apache-2.0",
