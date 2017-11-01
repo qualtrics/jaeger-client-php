@@ -74,7 +74,13 @@ final class Tracer implements OTTracer
 
     public function inject(SpanContext $spanContext, $format, Writer $carrier)
     {
-        // TODO(tylerc): Implement this.
+        switch ($format) {
+            case OTTracer::FORMAT_HTTP_HEADERS:
+                $carrier->set("Uber-Trace-ID", $spanContext->encode());
+
+            default:
+                // TODO(tylerc): Implement this.
+        }
     }
 
     public function extract($format, Reader $carrier)

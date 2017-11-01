@@ -63,7 +63,7 @@ final class SpanContext implements OTSpanContext
 
     // ---
 
-    public function __toString()
+    public function encode()
     {
         if (is_numeric($this->traceIdHigh)) {
             return sprintf(
