@@ -24,7 +24,7 @@ final class SpanContext implements OTSpanContext
     private function __construct($traceId, $parentId)
     {
         // span id is always some random number
-        $this->spanId = mt_rand() << 32 | mt_rand();
+        $this->spanId = (int) mt_rand() << 31 | mt_rand(); // max: 2^62 - 1
 
         // set the trace id
         if (is_integer($traceId)) {
@@ -34,8 +34,8 @@ final class SpanContext implements OTSpanContext
             $this->traceIdLow = $traceId['low'];
             $this->traceIdHigh = $traceId['high'];
         } else {
-            $this->traceIdLow = mt_rand() << 32 | mt_rand();
-            $this->traceIdHigh = mt_rand() << 32 | mt_rand();
+            $this->traceIdLow = (int) (mt_rand() << 31 | mt_rand()); // max: 2^62 - 1
+            $this->traceIdHigh = (int) (mt_rand() << 31 | mt_rand());
         }
 
         // a trace MAY have a parent, but might not
@@ -66,7 +66,14 @@ final class SpanContext implements OTSpanContext
     public function __toString()
     {
         if (is_numeric($this->traceIdHigh)) {
-            return sprintf("%x%016x:%x:%x:%x", $this->traceIdHigh, $this->traceIdLow, $this->spanId, $this->parentId, $this->flags);
+            return sprintf(
+                "%x%016x:%x:%x:%x",
+                $this->traceIdHigh,
+                $this->traceIdLow,
+                $this->spanId,
+                $this->parentId,
+                $this->flags
+            );
         }
         return sprintf("%x:%x:%x:%x", $this->traceIdLow, $this->spanId, $this->parentId, $this->flags);
     }

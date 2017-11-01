@@ -67,9 +67,4 @@ class ZipkinReporterTest extends PHPUnit_Framework_TestCase
             );
         }
     }
-
-    protected function getClassName()
-    {
-        return 'Shared\Libraries\Jaeger\JSpan';
-    }
 }

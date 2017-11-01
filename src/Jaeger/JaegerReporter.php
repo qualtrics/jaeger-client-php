@@ -84,7 +84,7 @@ final class JaegerReporter implements Reporter
 
         $logs = array_map(function ($log) {
             return new Log([
-                "timestamp" => $log["timetamp"],
+                "timestamp" => $log["timestamp"],
                 "fields" => $this->buildTags($log["fields"]),
             ]);
         }, $span->getLogs());
