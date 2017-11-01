@@ -29,7 +29,7 @@ use Jaeger/Tracer;
 use OpenTracing\GlobalTracer;
 
 GlobalTracer::set(Tracer::create("service-name", [
-	Tracer::SAMPLER => new AlwaysSampler(),
+	Tracer::SAMPLER => new ConstSampler(true),
 	Tracer::Reporter => new NullReporter(),
 ]));
 ```
@@ -64,7 +64,8 @@ TODO: Introduce the "Transport" construct and refactor the latter two Reporters 
 
 The tracer does not record all spans, but only those that have the sampling bit set in the flags. When a new trace is started and a new unique ID is generated, a sampling decision is made concerning whether this trace should be sampled. The sampling decision is propagated to all downstream calls via the `flags` field of the trace context. The following samplers are available:
 
-- `AlwaysSampler` samples all spans.
+- `ConstSampler` always makes the same sampling decision for all trace IDs. it can be configured to either sample all traces, or to sample none.
+- `ProbabilisticSampler` uses a fixed sampling rate as a probability for a given trace to be sampled. The actual decision is made by comparing the trace ID with a random number multiplied by the sampling rate.
 
 ### Baggage Injection
 

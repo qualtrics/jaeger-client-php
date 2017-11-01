@@ -29,7 +29,7 @@ final class Tracer implements OTTracer
 
         // configure with defaults
         $tracer->serviceName = $serviceName;
-        $tracer->sampler = new AlwaysSampler();
+        $tracer->sampler = new ConstSampler(false);
         $tracer->reporter = new NullReporter();
 
         // add standard tracer-level tags
