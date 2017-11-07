@@ -1,9 +1,9 @@
 # Jaeger Bindings for PHP OpenTracing API
 
-[![Build Status](https://travis-ci.org/tylerchr/jcphp.svg?branch=travis)](https://travis-ci.org/tylerchr/jcphp)
+[![Build Status](https://travis-ci.org/qualtrics/jaeger-client-php.svg?branch=master)](https://travis-ci.org/qualtrics/jaeger-client-php)
 [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%205.6-8892BF.svg)](https://php.net/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/qualtrics/jaeger-client-php/blob/travis/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/qualtrics/jaeger-client-php/blob/master/LICENSE)
 
 This is a client-side library that implements an OpenTracing Tracer, with Zipkin-compatible data model. The library's package is `qualtrics/jaeger-client-php`.
 
