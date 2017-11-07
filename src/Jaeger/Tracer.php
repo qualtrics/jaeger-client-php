@@ -77,6 +77,7 @@ final class Tracer implements OTTracer
         switch ($format) {
             case OTTracer::FORMAT_HTTP_HEADERS:
                 $carrier->set("Uber-Trace-ID", $spanContext->encode());
+                break;
 
             default:
                 // TODO(tylerc): Implement this.

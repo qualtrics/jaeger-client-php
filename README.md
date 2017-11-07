@@ -1,12 +1,23 @@
 # Jaeger Bindings for PHP OpenTracing API
 
-This is a client-side library that implements an OpenTracing Tracer, with Zipkin-compatible data model.
+[![Build Status](https://travis-ci.org/tylerchr/jcphp.svg?branch=travis)](https://travis-ci.org/tylerchr/jcphp)
+[![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
+[![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%205.6-8892BF.svg)](https://php.net/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/qualtrics/jaeger-client-php/blob/travis/LICENSE)
 
-The library's package is `mdrt/jaeger-client-php`.
+This is a client-side library that implements an OpenTracing Tracer, with Zipkin-compatible data model. The library's package is `qualtrics/jaeger-client-php`.
+
+**IMPORTANT**: Please note that while `jaeger-client-php` can record and report spans, it is **still under active development** and remains incomplete in a number of ways. It's modeled after [jaeger-client-go](https://github.com/jaegertracing/jaeger-client-go) in design, but many components are not yet implemented.
+
+## Required Reading
+
+In order to understand the library, one must first be familiar with the
+[OpenTracing project](http://opentracing.io) and
+[specification](http://opentracing.io/documentation/pages/spec.html) more specifically. Additionally, one should review the [PHP OpenTracing API](https://github.com/opentracing/opentracing-php/blob/master/README.md).
 
 ## How to Contribute
 
-Reach out to `@tylerc` for now.
+We're still working on this; reach out to `@tylerchr` for now.
 
 ## Installation
 
@@ -17,7 +28,7 @@ We recommend using a dependency manager like Composer when including this librar
 	...
     "require": {
     	...
-        "mdrt/jaeger": "dev-master"
+        "qualtrics/jaeger": "dev-master"
     }
 }
 ```
@@ -73,4 +84,4 @@ Baggage is not currently supported.
 
 ## License
 
-Pending approval from legal, we intend to use the [Apache 2.0 License](https://github.com/jaegertracing/jaeger-client-go/blob/master/LICENSE).
+[Apache 2.0 License](https://github.com/qualtrics/jaeger-client-php/blob/master/LICENSE).
