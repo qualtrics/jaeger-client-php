@@ -1,5 +1,5 @@
 {
-    "name": "mdrt/jaeger",
+    "name": "qualtrics/jaeger-client-php",
     "description": "Jaeger bindings for the PHP OpenTracing API",
     "type": "library",
     "license": "Apache-2.0",
