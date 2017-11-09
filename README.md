@@ -7,7 +7,7 @@
 
 This is a client-side library that implements an OpenTracing Tracer, with Zipkin-compatible data model. The library's package is `qualtrics/jaeger-client-php`.
 
-**IMPORTANT**: Please note that while `jaeger-client-php` can record and report spans, it is **still under active development** and remains incomplete in a number of ways. It's modeled after [jaeger-client-go](https://github.com/jaegertracing/jaeger-client-go) in design, but many components are not yet implemented.
+**IMPORTANT**: Please note that while `jaeger-client-php` can record and report spans, it is **still under active development** and remains incomplete in a number of ways. It's modeled after [jaeger-client-go](https://github.com/jaegertracing/jaeger-client-go) in design, but many components are not yet implemented and the API is still subject to change.
 
 ## Required Reading
 
@@ -28,7 +28,7 @@ We recommend using a dependency manager like Composer when including this librar
     ...
     "require": {
         ...
-        "qualtrics/jaeger": "dev-master"
+        "qualtrics/jaeger-client-php": "dev-master"
     }
 }
 ```
@@ -36,12 +36,15 @@ We recommend using a dependency manager like Composer when including this librar
 ## Initialization
 
 ```php
-use Jaeger/Tracer;
+use Jaeger\Reporter\RemoteReporter;
+use Jaeger\Sampler\ProbabilisticSampler;
+use Jaeger\Tracer;
+use Jaeger\Transport\JaegerTransport;
 use OpenTracing\GlobalTracer;
 
 GlobalTracer::set(Tracer::create("service-name", [
-    Tracer::SAMPLER => new ConstSampler(true),
-    Tracer::Reporter => new NullReporter(),
+    Tracer::SAMPLER => new ProbabilisticSampler(0.01), // Sample 1% of requests.
+    Tracer::REPORTER => new RemoteReporter(new JaegerTransport("127.0.0.1", "5775")), // Send to jaeger-agent on localhost:5775
 ]));
 ```
 
@@ -65,18 +68,9 @@ Since this tracer is fully compliant with the OpenTracing API 1.0, all code inst
 
 A "reporter" is a component receives the finished spans and reports them to somewhere. Under normal circumstances, the Tracer should use the default RemoteReporter, which sends the spans out of process via configurable "transport". Additionally, the `NullReporter`, a no-op reporter that does nothing, may be helpful to e.g. ignore trace data when tracing is disabled.
 
-A "reporter" is a component that receives the finished spans and reports them somewhere. Three standard reporters are implemented at present:
-
-- `NullReporter`: a no-op reporter that does nothing
-- `NullReporter`: a no-op reporter that does nothing
-- `JaegerReporter`: a reporter that forwards spans to a  using the `emitBatch` API.
-- `ZipkinReporter`: a reporter that forwards spans to a [jaeger-agent](https://github.com/jaegertracing/jaeger/tree/master/cmd/agent) using the `emitZipkinBatch` API.
-
-TODO: Introduce the "Transport" construct and refactor the latter two Reporters as Transports, and implement a RemoteReporter to match the jaeger-client-go API.
-
 ### Transports
 
-The remote reporter uses "transports" to actually send the spans out of process. Currently the only supported transport is Thrift over UDP. More transports will be added in the future.
+The remote reporter uses "transports" to actually send the spans out of process. Currently the only supported transport is Thrift over UDP. Perhaps more transports will be added in the future.
 
 Two data formats are currently supported:
 
