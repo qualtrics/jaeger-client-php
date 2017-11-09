@@ -1,8 +1,8 @@
 <?php
 
-namespace JaegerTests\Unit;
+namespace JaegerTests\Unit\Sampler;
 
-use Jaeger\ProbabilisticSampler;
+use Jaeger\Sampler\ProbabilisticSampler;
 use PHPUnit_Framework_TestCase;
 
 class ProbabilisticSamplerTest extends PHPUnit_Framework_TestCase
@@ -10,8 +10,10 @@ class ProbabilisticSamplerTest extends PHPUnit_Framework_TestCase
     /**
      * @author tylerc
      */
-    public function testSampling()
+    public function testProbabilisticSampling()
     {
+        $sampleMax = (int) (mt_getrandmax() << 31 | mt_getrandmax());
+
         $cases = [
             [
                 "rate" => 0,
@@ -21,7 +23,7 @@ class ProbabilisticSamplerTest extends PHPUnit_Framework_TestCase
             [
                 "rate" => 0,
                 "trace_id" => [
-                    "low" => PHP_INT_MAX,
+                    "low" => $sampleMax,
                     "high" => 0xfeedface
                 ],
                 "sampled" => false,
@@ -34,7 +36,7 @@ class ProbabilisticSamplerTest extends PHPUnit_Framework_TestCase
             [
                 "rate" => 1,
                 "trace_id" => [
-                    "low" => PHP_INT_MAX,
+                    "low" => $sampleMax,
                     "high" => 0xfeedface
                 ],
                 "sampled" => true,
@@ -42,7 +44,7 @@ class ProbabilisticSamplerTest extends PHPUnit_Framework_TestCase
             [
                 "rate" => 0.999,
                 "trace_id" => [
-                    "low" => PHP_INT_MAX,
+                    "low" => $sampleMax,
                     "high" => 0xfeedface
                 ],
                 "sampled" => false,
@@ -50,7 +52,7 @@ class ProbabilisticSamplerTest extends PHPUnit_Framework_TestCase
             [
                 "rate" => 0.5,
                 "trace_id" => [
-                    "low" => PHP_INT_MAX >> 1,
+                    "low" => $sampleMax >> 1,
                     "high" => 0xfeedface
                 ],
                 "sampled" => true,
@@ -58,7 +60,7 @@ class ProbabilisticSamplerTest extends PHPUnit_Framework_TestCase
             [
                 "rate" => 0.5,
                 "trace_id" => [
-                    "low" => PHP_INT_MAX >> 1 - 1,
+                    "low" => $sampleMax >> 1 - 1,
                     "high" => 0xfeedface
                 ],
                 "sampled" => false,

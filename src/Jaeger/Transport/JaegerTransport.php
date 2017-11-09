@@ -1,7 +1,8 @@
 <?php
 
-namespace Jaeger;
+namespace Jaeger\Transport;
 
+use Jaeger\Span;
 use Jaeger\Thrift\AgentClient;
 use Jaeger\Thrift\Batch;
 use Jaeger\Thrift\Log;
@@ -14,10 +15,13 @@ use Jaeger\Thrift\TagType;
 use OpenTracing\Reference;
 use Thrift\Protocol\TCompactProtocol;
 
-final class JaegerReporter implements Reporter
+final class JaegerTransport implements Transport
 {
     private $transport;
     private $client;
+
+    private $buffer = [];
+    private $process = null;
 
     public function __construct($address = "127.0.0.1", $port = 5775)
     {
@@ -31,20 +35,48 @@ final class JaegerReporter implements Reporter
     *
     * @param Span $span
     */
-    public function reportSpan(Span $span)
+    public function append(Span $span)
     {
-        // TODO(tylerc): Buffer spans and send them as they accumulate; send the remainder in flush().
+        // Grab a copy of the process data, if we didn't already.
+        if ($this->process == null) {
+            $this->process = new Process([
+                "serviceName" => $span->getTracer()->getServiceName(),
+                "tags" => $this->buildTags($span->getTracer()->getTags()),
+            ]);
+        }
+
+        $this->buffer[] = $this->encode($span);
+
+        // TODO(tylerc): Buffer spans and send them in as few UDP packets as possible.
+        return $this->flush();
+    }
+
+    /**
+    * Flush submits the internal buffer to the remote server. It returns the
+    * number of spans flushed.
+    */
+    public function flush()
+    {
+        $spans = count($this->buffer);
+
+        // no spans to flush
+        if ($spans <= 0) {
+            return 0;
+        }
 
         // emit a batch
         $this->client->emitBatch(new Batch([
-            "process" => new Process([
-                "serviceName" => $span->getTracer()->getServiceName(),
-                "tags" => $this->buildTags($span->getTracer()->getTags()),
-            ]),
-            "spans" => [
-                $this->encode($span),
-            ],
+            "process" => $this->process,
+            "spans" => $this->buffer,
         ]));
+
+        // flush the UDP data
+        $this->transport->flush();
+
+        // reset the internal buffer
+        $this->buffer = [];
+
+        return $spans;
     }
 
     /**
@@ -56,7 +88,7 @@ final class JaegerReporter implements Reporter
         $this->transport->close();
     }
 
-    public function encode(Span $span)
+    private function encode(Span $span)
     {
         $startTime = (int) ($span->getStartTime() * 1000000); // microseconds
         $duration = (int) ($span->getDuration() * 1000000); // microseconds

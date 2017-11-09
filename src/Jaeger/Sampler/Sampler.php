@@ -1,6 +1,6 @@
 <?php
 
-namespace Jaeger;
+namespace Jaeger\Sampler;
 
 interface Sampler
 {

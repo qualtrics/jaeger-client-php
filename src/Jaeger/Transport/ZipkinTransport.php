@@ -1,15 +1,19 @@
 <?php
 
-namespace Jaeger;
+namespace Jaeger\Transport;
 
+use Jaeger\Span;
 use Jaeger\Thrift\AgentClient;
 use Jaeger\Thrift\Zipkin;
+use Jaeger\Transport\TUDPTransport;
 use Thrift\Protocol\TCompactProtocol;
 
-final class ZipkinReporter implements Reporter
+final class ZipkinTransport implements Transport
 {
     private $transport;
     private $client;
+
+    private $spans = [];
 
     public function __construct($address = "127.0.0.1", $port = 5775)
     {
@@ -23,10 +27,8 @@ final class ZipkinReporter implements Reporter
     *
     * @param Span $span
     */
-    public function reportSpan(Span $span)
+    public function append(Span $span)
     {
-        // TODO(tylerc): Buffer spans and send them as they accumulate; send the remainder in flush().
-
         // identify ourself
         $endpoint = new Zipkin\Endpoint(array(
             "ipv4" => 167918715,
@@ -35,10 +37,30 @@ final class ZipkinReporter implements Reporter
             "ipv6" => "",
         ));
 
+        $this->spans[] = $this->encode($span, $endpoint);
+
+        // TODO(tylerc): Buffer spans and send them in as few UDP packets as possible.
+        return $this->flush();
+    }
+
+    /**
+    * Flush submits the internal buffer to the remote server. It returns the
+    * number of spans flushed.
+    */
+    public function flush()
+    {
+        $spans = count($this->buffer);
+
         // emit a batch
-        $this->client->emitZipkinBatch([
-            $this->encode($span, $endpoint),
-        ]);
+        $this->client->emitZipkinBatch($this->spans);
+
+        // flush the UDP data
+        $this->transport->flush();
+
+        // reset the internal buffer
+        $this->buffer = [];
+
+        return $spans;
     }
 
     /**
@@ -82,7 +104,7 @@ final class ZipkinReporter implements Reporter
         }
     }
 
-    public function encode(Span $span, $endpoint)
+    private function encode(Span $span, $endpoint)
     {
         $startTime = (int) ($span->getStartTime() * 1000000); // microseconds
         $duration = (int) ($span->getDuration() * 1000000); // microseconds

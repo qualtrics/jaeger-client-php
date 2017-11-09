@@ -1,6 +1,6 @@
 <?php
 
-namespace Jaeger;
+namespace Jaeger\Transport;
 
 use Thrift\Transport\TTransport;
 use Thrift\Exception\TTransportException;
@@ -69,6 +69,11 @@ class TUDPTransport extends TTransport
 
     public function flush()
     {
+        // no data to send; don't send a packet
+        if (strlen($this->buffer) == 0) {
+            return;
+        }
+
         // TODO(tylerc): This assumes that the whole buffer successfully sent... I believe
         // that this should always be the case for UDP packets, but I could be wrong.
 

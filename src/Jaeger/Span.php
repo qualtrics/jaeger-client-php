@@ -20,7 +20,7 @@ final class Span implements OTSpan
     private $logs = [];
     private $references = [];
 
-    public static function create($tracer, $operationName, $options)
+    public static function create($tracer, $operationName, SpanOptions $options)
     {
         return new self($tracer, $operationName, $options);
     }

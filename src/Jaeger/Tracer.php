@@ -3,6 +3,8 @@
 namespace Jaeger;
 
 use Jaeger\Span;
+use Jaeger\Sampler\ConstSampler;
+use Jaeger\Reporter\NullReporter;
 use OpenTracing\Propagators\Reader;
 use OpenTracing\Propagators\Writer;
 use OpenTracing\SpanContext;
@@ -34,10 +36,14 @@ final class Tracer implements OTTracer
 
         // add standard tracer-level tags
         $tracer->tags["hostname"] = gethostname();
-        $tracer->tags["ip"] = $_SERVER['SERVER_ADDR'] . ":" . $_SERVER['SERVER_PORT'];
         $tracer->tags["php.version"] = PHP_VERSION;
         $tracer->tags["php.pid"] = getmypid();
         $tracer->tags["jaeger.version"] = "jaeger-php-qualtrics";
+
+        // add the server's IP if we're a web server
+        if (php_sapi_name() == "apache2handler") {
+            $tracer->tags["ip"] = $_SERVER['SERVER_ADDR'] . ":" . $_SERVER['SERVER_PORT'];
+        }
 
         foreach ($options as $key => $value) {
             switch ($key) {
@@ -99,7 +105,9 @@ final class Tracer implements OTTracer
 
     public function reportSpan($span)
     {
-        $this->reporter->reportSpan($span);
+        if ($span->getContext()->isSampled()) {
+            $this->reporter->reportSpan($span);
+        }
     }
 
     public function getServiceName()

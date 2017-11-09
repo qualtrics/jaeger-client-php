@@ -25,9 +25,9 @@ We recommend using a dependency manager like Composer when including this librar
 
 ```json
 {
-	...
+    ...
     "require": {
-    	...
+        ...
         "qualtrics/jaeger": "dev-master"
     }
 }
@@ -40,8 +40,8 @@ use Jaeger/Tracer;
 use OpenTracing\GlobalTracer;
 
 GlobalTracer::set(Tracer::create("service-name", [
-	Tracer::SAMPLER => new ConstSampler(true),
-	Tracer::Reporter => new NullReporter(),
+    Tracer::SAMPLER => new ConstSampler(true),
+    Tracer::Reporter => new NullReporter(),
 ]));
 ```
 
@@ -50,7 +50,7 @@ You'll likely also want to make sure to flush the tracer just prior to applicati
 ```php
 register_shutdown_function(function() {
 
-	GlobalTracer::get()->flush();
+    GlobalTracer::get()->flush();
 
 })
 ```
@@ -63,13 +63,25 @@ Since this tracer is fully compliant with the OpenTracing API 1.0, all code inst
 
 ### Reporters
 
+A "reporter" is a component receives the finished spans and reports them to somewhere. Under normal circumstances, the Tracer should use the default RemoteReporter, which sends the spans out of process via configurable "transport". Additionally, the `NullReporter`, a no-op reporter that does nothing, may be helpful to e.g. ignore trace data when tracing is disabled.
+
 A "reporter" is a component that receives the finished spans and reports them somewhere. Three standard reporters are implemented at present:
 
 - `NullReporter`: a no-op reporter that does nothing
-- `JaegerReporter`: a reporter that forwards spans to a [jaeger-agent](https://github.com/jaegertracing/jaeger/tree/master/cmd/agent) using the `emitBatch` API.
+- `NullReporter`: a no-op reporter that does nothing
+- `JaegerReporter`: a reporter that forwards spans to a  using the `emitBatch` API.
 - `ZipkinReporter`: a reporter that forwards spans to a [jaeger-agent](https://github.com/jaegertracing/jaeger/tree/master/cmd/agent) using the `emitZipkinBatch` API.
 
 TODO: Introduce the "Transport" construct and refactor the latter two Reporters as Transports, and implement a RemoteReporter to match the jaeger-client-go API.
+
+### Transports
+
+The remote reporter uses "transports" to actually send the spans out of process. Currently the only supported transport is Thrift over UDP. More transports will be added in the future.
+
+Two data formats are currently supported:
+
+- The native Jaeger Thrift span format, which is accepted by the `emitBatch` API of [jaeger-agent](https://github.com/jaegertracing/jaeger/tree/master/cmd/agent)
+- The Zipkin Thrift 1.x span format, which allows easy integration of the tracer with Zipkin backends and is also accepted by the `emitZipkinBatch` API of [jaeger-agent](https://github.com/jaegertracing/jaeger/tree/master/cmd/agent)
 
 ### Sampling
 

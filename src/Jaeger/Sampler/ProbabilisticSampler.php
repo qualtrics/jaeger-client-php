@@ -1,6 +1,6 @@
 <?php
 
-namespace Jaeger;
+namespace Jaeger\Sampler;
 
 use Exception;
 
@@ -15,8 +15,14 @@ class ProbabilisticSampler implements Sampler
             throw new Exception("invalid sampling rate");
         }
 
+        // PHP has a hard time getting a true 64-bit random value, so we'll settle
+        // for the maximum value that might be produced by our identifier generator.
+        //
+        // In practice this turns out to be 2^63 - 1 on a 64-bit system.
+        $sampleMax = (int) (mt_getrandmax() << 31 | mt_getrandmax());
+
         $this->samplingRate = (double) $samplingRate;
-        $this->samplingBoundary = $this->samplingRate * PHP_INT_MAX;
+        $this->samplingBoundary = $this->samplingRate * $sampleMax;
     }
 
     public function isSampled($traceId, $operation)

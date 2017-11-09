@@ -1,12 +1,12 @@
 <?php
 
-namespace JaegerTests\Unit;
+namespace JaegerTests\Unit\Transport;
 
-use Jaeger\ZipkinReporter;
+use Jaeger\Transport\ZipkinTransport;
 use Jaeger\Thrift\Zipkin;
 use PHPUnit_Framework_TestCase;
 
-class ZipkinReporterTest extends PHPUnit_Framework_TestCase
+class ZipkinTransportTest extends PHPUnit_Framework_TestCase
 {
     /**
      * @author tylerc
@@ -56,14 +56,14 @@ class ZipkinReporterTest extends PHPUnit_Framework_TestCase
             ],
         ];
 
-        $reporter = new ZipkinReporter();
+        $transport = new ZipkinTransport();
 
         foreach ($cases as $case) {
             // It's not strictly necessary to base64_encode each of these, but it sure
             // makes the test output more legible when a case fails!
             $this->assertEquals(
                 base64_encode($case["output"]),
-                base64_encode($reporter->binaryEncode($case["type"], $case["input"]))
+                base64_encode($transport->binaryEncode($case["type"], $case["input"]))
             );
         }
     }
