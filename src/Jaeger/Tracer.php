@@ -98,7 +98,7 @@ final class Tracer implements OTTracer
 
     public function flush()
     {
-        // do nothing
+        $this->reporter->close();
     }
 
     // ---

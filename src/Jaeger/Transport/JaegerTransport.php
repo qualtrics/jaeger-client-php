@@ -17,17 +17,24 @@ use Thrift\Protocol\TCompactProtocol;
 
 final class JaegerTransport implements Transport
 {
+    // MAX_BUFFER_SIZE indicates the default maximum buffer size, or the size threshold
+    // at which the buffer will be flushed to the agent.
+    const MAX_BUFFER_SIZE = 100;
+
     private $transport;
     private $client;
 
     private $buffer = [];
     private $process = null;
+    private $maxBufferSize = 0;
 
-    public function __construct($address = "127.0.0.1", $port = 5775)
+    public function __construct($address = "127.0.0.1", $port = 5775, $maxBufferSize = 0)
     {
         $this->transport = new TUDPTransport($address, $port);
         $p = new TCompactProtocol($this->transport);
         $this->client = new AgentClient($p, $p);
+
+        $this->maxBufferSize = ($maxBufferSize > 0 ? $maxBufferSize : self::MAX_BUFFER_SIZE);
     }
 
     /**
@@ -54,15 +61,24 @@ final class JaegerTransport implements Transport
     /**
     * Flush submits the internal buffer to the remote server. It returns the
     * number of spans flushed.
+    *
+    * @param $force bool - force a flush, even on a partial buffer
     */
-    public function flush()
+    public function flush($force = false)
     {
         $spans = count($this->buffer);
+
+        // buffer not full yet
+        if (!$force && $spans < $this->maxBufferSize) {
+            return 0;
+        }
 
         // no spans to flush
         if ($spans <= 0) {
             return 0;
         }
+
+        error_log("@BLUE Tracing: Flushing " . $spans . " spans (forced: " . ($force ? "YES" : "NO") . ")");
 
         // emit a batch
         $this->client->emitBatch(new Batch([
@@ -85,6 +101,8 @@ final class JaegerTransport implements Transport
     */
     public function close()
     {
+        $this->flush(true); // flush all remaining data
+
         $this->transport->close();
     }
 
