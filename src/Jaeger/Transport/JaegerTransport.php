@@ -17,9 +17,9 @@ use Thrift\Protocol\TCompactProtocol;
 
 final class JaegerTransport implements Transport
 {
-    // MAX_BUFFER_SIZE indicates the default maximum buffer size, or the size threshold
+    // DEFAULT_BUFFER_SIZE indicates the default maximum buffer size, or the size threshold
     // at which the buffer will be flushed to the agent.
-    const MAX_BUFFER_SIZE = 100;
+    const DEFAULT_BUFFER_SIZE = 100;
 
     private $transport;
     private $client;
@@ -34,7 +34,7 @@ final class JaegerTransport implements Transport
         $p = new TCompactProtocol($this->transport);
         $this->client = new AgentClient($p, $p);
 
-        $this->maxBufferSize = ($maxBufferSize > 0 ? $maxBufferSize : self::MAX_BUFFER_SIZE);
+        $this->maxBufferSize = ($maxBufferSize > 0 ? $maxBufferSize : self::DEFAULT_BUFFER_SIZE);
     }
 
     /**
@@ -77,8 +77,6 @@ final class JaegerTransport implements Transport
         if ($spans <= 0) {
             return 0;
         }
-
-        error_log("@BLUE Tracing: Flushing " . $spans . " spans (forced: " . ($force ? "YES" : "NO") . ")");
 
         // emit a batch
         $this->client->emitBatch(new Batch([
