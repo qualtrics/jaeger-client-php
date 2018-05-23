@@ -14,6 +14,7 @@ use Jaeger\Thrift\Tag;
 use Jaeger\Thrift\TagType;
 use OpenTracing\Reference;
 use Thrift\Protocol\TCompactProtocol;
+use Thrift\Exception\TTransportException;
 
 final class JaegerTransport implements Transport
 {
@@ -78,17 +79,25 @@ final class JaegerTransport implements Transport
             return 0;
         }
 
-        // emit a batch
-        $this->client->emitBatch(new Batch([
-            "process" => $this->process,
-            "spans" => $this->buffer,
-        ]));
+        try
+        {
+            // emit a batch
+            $this->client->emitBatch(new Batch([
+                "process" => $this->process,
+                "spans" => $this->buffer,
+            ]));
 
-        // flush the UDP data
-        $this->transport->flush();
+            // flush the UDP data
+            $this->transport->flush();
 
-        // reset the internal buffer
-        $this->buffer = [];
+            // reset the internal buffer
+            $this->buffer = [];
+        }
+        catch (TTransportException $e)
+        {
+            error_log("jaeger: transport failure: " . $e->getMessage());
+            return 0;
+        }
 
         return $spans;
     }
