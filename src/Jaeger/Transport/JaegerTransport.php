@@ -79,8 +79,7 @@ final class JaegerTransport implements Transport
             return 0;
         }
 
-        try
-        {
+        try {
             // emit a batch
             $this->client->emitBatch(new Batch([
                 "process" => $this->process,
@@ -92,9 +91,7 @@ final class JaegerTransport implements Transport
 
             // reset the internal buffer
             $this->buffer = [];
-        }
-        catch (TTransportException $e)
-        {
+        } catch (TTransportException $e) {
             error_log("jaeger: transport failure: " . $e->getMessage());
             return 0;
         }
