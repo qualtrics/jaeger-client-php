@@ -26,7 +26,7 @@ class TUDPTransport extends TTransport
             $errorcode = socket_last_error();
             $errormsg = socket_strerror($errorcode);
              
-            echo "Couldn't create socket: [$errorcode] $errormsg \n";
+            error_log("jaeger: transport: Couldn't create socket: [$errorcode] $errormsg");
 
             throw new TTransportException("unable to open UDP socket", TTransportException::UNKNOWN);
         }
@@ -53,14 +53,13 @@ class TUDPTransport extends TTransport
     public function read($len)
     {
         // not implemented
-        echo "reading from thrift udp socket";
     }
 
     public function write($buf)
     {
         // ensure that the data will still fit in a UDP packeg
         if (strlen($this->buffer) + strlen($buf) > self::MAX_UDP_PACKET) {
-            return new TTransportException("Data does not fit within one UDP packet", TTransportException::UNKNOWN);
+            throw new TTransportException("Data does not fit within one UDP packet", TTransportException::UNKNOWN);
         }
 
         // buffer up some data
@@ -81,11 +80,9 @@ class TUDPTransport extends TTransport
         if (!socket_sendto($this->socket, $this->buffer, strlen($this->buffer), 0, $this->server, $this->port)) {
             $errorcode = socket_last_error();
             $errormsg = socket_strerror($errorcode);
-
-            die("Could not send data: [$errorcode] $errormsg \n");
-            return new TTransportException("Data does not fit within one UDP packet", TTransportException::UNKNOWN);
-        } else {
-            $this->buffer = ""; // empty the buffer
+            error_log("jaeger: transport: Could not flush data: [$errorcode] $errormsg");
         }
+
+        $this->buffer = ""; // empty the buffer
     }
 }
