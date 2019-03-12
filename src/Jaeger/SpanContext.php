@@ -16,15 +16,19 @@ final class SpanContext implements OTSpanContext
 
     private $flags = 0;
 
-    public static function create($traceId = null, $parentId = null)
+    public static function create($traceId = null, $parentId = null, $spanId = null)
     {
-        return new self($traceId, $parentId);
+        return new self($traceId, $parentId, $spanId);
     }
 
-    private function __construct($traceId, $parentId)
+    private function __construct($traceId, $parentId, $spanId)
     {
-        // span id is always some random number
-        $this->spanId = (int) mt_rand() << 31 | mt_rand(); // max: 2^62 - 1
+        if (is_integer($spanId)) {
+            $this->spanId = $spanId;
+        } else {
+            // span id is some random number
+            $this->spanId = (int) mt_rand() << 31 | mt_rand(); // max: 2^62 - 1
+        }
 
         // set the trace id
         if (is_integer($traceId)) {
