@@ -83,6 +83,10 @@ final class Span implements OTSpan
     {
         // mark the duration
         $this->duration = microtime(true) - $this->startTime;
+        if ($this->duration < 0) {
+            // Negative duration is not possible, and causes overflow making the span look like it lasted 584,512 years.
+            $this->duration = 0;
+        }
 
         // report ourselves to the Tracer
         $this->tracer->reportSpan($this);
