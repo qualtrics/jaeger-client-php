@@ -100,20 +100,18 @@ final class Span implements OTSpan
     /**
      * {@inheritdoc}
      */
-    public function setTags(array $tags)
+    public function setTag($key, $value)
     {
-        foreach ($tags as $key => $value) {
-            if (!is_string($key)) {
-                throw new \Exception("tag key not a string");
-            }
-
-            if (!(is_string($value) || is_bool($value) || is_numeric($value) || is_null($value))) {
-                error_log("Type of " . $key . " is " . gettype($value));
-                throw new \Exception("invalid tag value type");
-            }
-
-            $this->tags[$key] = $value;
+        if (!is_string($key)) {
+            throw new \Exception("tag key not a string");
         }
+
+        if (!(is_string($value) || is_bool($value) || is_numeric($value) || is_null($value))) {
+            error_log("Type of " . $key . " is " . gettype($value));
+            throw new \Exception("invalid tag value type");
+        }
+
+        $this->tags[$key] = $value;
     }
 
     /**
