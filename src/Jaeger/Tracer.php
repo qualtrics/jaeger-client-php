@@ -5,11 +5,10 @@ namespace Jaeger;
 use Jaeger\Span;
 use Jaeger\Sampler\ConstSampler;
 use Jaeger\Reporter\NullReporter;
-use OpenTracing\Propagators\Reader;
-use OpenTracing\Propagators\Writer;
 use OpenTracing\SpanContext;
 use OpenTracing\SpanReference;
 use OpenTracing\Tracer as OTTracer;
+use OpenTracing\Formats;
 
 final class Tracer implements OTTracer
 {
@@ -78,11 +77,11 @@ final class Tracer implements OTTracer
         return $span;
     }
 
-    public function inject(SpanContext $spanContext, $format, Writer $carrier)
+    public function inject(SpanContext $spanContext, $format, &$carrier)
     {
         switch ($format) {
-            case OTTracer::FORMAT_HTTP_HEADERS:
-                $carrier->set("Uber-Trace-ID", $spanContext->encode());
+            case Formats\HTTP_HEADERS:
+                $carrier["Uber-Trace-ID"] = $spanContext->encode();
                 break;
 
             default:
@@ -90,7 +89,7 @@ final class Tracer implements OTTracer
         }
     }
 
-    public function extract($format, Reader $carrier)
+    public function extract($format, $carrier)
     {
         // TODO(tylerc): Implement this.
         return SpanContext::createAsDefault();
