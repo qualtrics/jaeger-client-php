@@ -55,12 +55,12 @@ final class SpanContext implements OTSpanContext
         return new EmptyIterator();
     }
 
-    public function getBaggageItem($key)
+    public function getBaggageItem(string $key): ?string
     {
         return null;
     }
 
-    public function withBaggageItem($key, $value)
+    public function withBaggageItem(string $key, string $value): OTSpanContext
     {
         return new self();
     }

@@ -5,8 +5,12 @@ namespace Jaeger;
 use Jaeger\Span;
 use Jaeger\Sampler\ConstSampler;
 use Jaeger\Reporter\NullReporter;
+use OpenTracing\Scope;
+use OpenTracing\ScopeManager;
+use OpenTracing\NoopScope;
+use OpenTracing\NoopScopeManager;
+use OpenTracing\Span as OTSpan;
 use OpenTracing\SpanContext;
-use OpenTracing\SpanReference;
 use OpenTracing\Tracer as OTTracer;
 use OpenTracing\Formats;
 
@@ -65,7 +69,22 @@ final class Tracer implements OTTracer
         return $tracer;
     }
 
-    public function startSpan($operationName, $options)
+    public function getScopeManager(): ScopeManager
+    {
+        return new NoopScopeManager();
+    }
+
+    public function getActiveSpan(): ?OTSpan
+    {
+        return null;
+    }
+
+    public function startActiveSpan(string $operationName, $options = []): Scope
+    {
+        return new NoopScope();
+    }
+
+    public function startSpan(string $operationName, $options = []): OTSpan
     {
         $span = Span::create($this, $operationName, $options);
 
@@ -77,7 +96,7 @@ final class Tracer implements OTTracer
         return $span;
     }
 
-    public function inject(SpanContext $spanContext, $format, &$carrier)
+    public function inject(SpanContext $spanContext, string $format, &$carrier): void
     {
         switch ($format) {
             case Formats\HTTP_HEADERS:
@@ -89,13 +108,13 @@ final class Tracer implements OTTracer
         }
     }
 
-    public function extract($format, $carrier)
+    public function extract(string $format, $carrier): ?SpanContext
     {
         // TODO(tylerc): Implement this.
         return SpanContext::createAsDefault();
     }
 
-    public function flush()
+    public function flush(): void
     {
         $this->reporter->close();
     }

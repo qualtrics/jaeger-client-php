@@ -7,7 +7,8 @@ use Jaeger\Thrift;
 use Jaeger\Thrift\Zipkin;
 use OpenTracing\Reference;
 use OpenTracing\Span as OTSpan;
-use OpenTracing\SpanOptions;
+use OpenTracing\SpanContext as OTSpanContext;
+use OpenTracing\StartSpanOptions;
 
 final class Span implements OTSpan
 {
@@ -20,12 +21,12 @@ final class Span implements OTSpan
     private $logs = [];
     private $references = [];
 
-    public static function create($tracer, $operationName, SpanOptions $options)
+    public static function create($tracer, $operationName, StartSpanOptions $options)
     {
         return new self($tracer, $operationName, $options);
     }
 
-    private function __construct($tracer, $operationName, SpanOptions $options = null)
+    private function __construct($tracer, $operationName, StartSpanOptions $options = null)
     {
         $this->tracer = $tracer;
         $this->operationName = $operationName;
@@ -58,7 +59,7 @@ final class Span implements OTSpan
     /**
      * {@inheritdoc}
      */
-    public function getOperationName()
+    public function getOperationName(): string
     {
         return $this->operationName;
     }
@@ -71,7 +72,7 @@ final class Span implements OTSpan
     /**
      * {@inheritdoc}
      */
-    public function getContext()
+    public function getContext(): OTSpanContext
     {
         return $this->context;
     }
@@ -79,7 +80,7 @@ final class Span implements OTSpan
     /**
      * {@inheritdoc}
      */
-    public function finish($finishTime = null, array $logRecords = [])
+    public function finish($finishTime = null): void
     {
         // mark the duration
         $this->duration = microtime(true) - $this->startTime;
@@ -92,7 +93,7 @@ final class Span implements OTSpan
         $this->tracer->reportSpan($this);
     }
 
-    public function overwriteOperationName($newOperationName)
+    public function overwriteOperationName(string $newOperationName): void
     {
         $this->operation = $newOperationName;
     }
@@ -100,12 +101,8 @@ final class Span implements OTSpan
     /**
      * {@inheritdoc}
      */
-    public function setTag($key, $value)
+    public function setTag(string $key, $value): void
     {
-        if (!is_string($key)) {
-            throw new \Exception("tag key not a string");
-        }
-
         if (!(is_string($value) || is_bool($value) || is_numeric($value) || is_null($value))) {
             error_log("Type of " . $key . " is " . gettype($value));
             throw new \Exception("invalid tag value type");
@@ -117,7 +114,7 @@ final class Span implements OTSpan
     /**
      * {@inheritdoc}
      */
-    public function log(array $fields = [], $timestamp = null)
+    public function log(array $fields = [], $timestamp = null): void
     {
         if ($timestamp == null) {
             $timestamp = microtime(true) * 1000000;
@@ -142,7 +139,7 @@ final class Span implements OTSpan
     /**
      * {@inheritdoc}
      */
-    public function addBaggageItem($key, $value)
+    public function addBaggageItem(string $key, string $value): void
     {
         throw new \Exception("not implemented");
     }
@@ -150,7 +147,7 @@ final class Span implements OTSpan
     /**
      * {@inheritdoc}
      */
-    public function getBaggageItem($key)
+    public function getBaggageItem(string $key): ?string
     {
         return null;
     }
