@@ -9,7 +9,7 @@ use Jaeger\Thrift\Zipkin;
 use Jaeger\Tracer;
 use Jaeger\Transport\Transport;
 use Jaeger\Transport\DummyTransport;
-use OpenTracing\SpanOptions;
+use OpenTracing\StartSpanOptions;
 use PHPUnit_Framework_TestCase;
 
 class RemoteReporterTest extends PHPUnit_Framework_TestCase
@@ -28,7 +28,7 @@ class RemoteReporterTest extends PHPUnit_Framework_TestCase
         ]);
 
         // sample span
-        $span = $tracer->startSpan("test-operation", SpanOptions::create([
+        $span = $tracer->startSpan("test-operation", StartSpanOptions::create([
             "tags" => [
                 "some-key" => "some-value",
             ],
