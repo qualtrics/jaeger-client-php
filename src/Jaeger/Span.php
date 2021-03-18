@@ -49,8 +49,8 @@ final class Span implements OTSpan
                 if ($parentId != null) {
                     throw new \Exception("can't be a child of two things");
                 }
-                $traceId = $ref->getContext()->getTraceID();
-                $parentId = $ref->getContext()->getSpanID();
+                $traceId = $ref->getSpanContext()->getTraceID();
+                $parentId = $ref->getSpanContext()->getSpanID();
             }
         }
         $this->context = SpanContext::create($traceId, $parentId);
