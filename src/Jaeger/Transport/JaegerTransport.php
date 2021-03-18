@@ -124,13 +124,13 @@ final class JaegerTransport implements Transport
                 $type = SpanRefType::FOLLOWS_FROM;
             }
 
-            $traceId = $reference->getContext()->getTraceID();
+            $traceId = $reference->getSpanContext()->getTraceID();
 
             return new SpanRef([
                 "refType" => $type,
                 "traceIdLow" => (is_array($traceId) ? $traceId["low"] : $traceId),
                 "traceIdHigh" => (is_array($traceId) ? $traceId["high"] : 0),
-                "spanId" => $reference->getContext()->getSpanID(),
+                "spanId" => $reference->getSpanContext()->getSpanID(),
             ]);
         }, $span->getReferences());
 
