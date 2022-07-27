@@ -1,0 +1,32 @@
+name: 'Unit Tests'
+
+on: [push]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php-version: ['7.1', '7.2', '7.3', '7.4']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        id: setup-php
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "${{ matrix.php-version }}"
+          extensions: "sockets"
+          tools: "composer"
+
+      - name: Install dependencies
+        run: composer install --ansi --no-interaction --no-progress --prefer-dist
+
+      - name: Run tests
+        run: composer test
+
+      - name: Run linter
+        run: composer lint
