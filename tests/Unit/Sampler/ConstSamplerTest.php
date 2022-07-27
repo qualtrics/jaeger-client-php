@@ -3,9 +3,9 @@
 namespace JaegerTests\Unit\Sampler;
 
 use Jaeger\Sampler\ConstSampler;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class ConstSamplerTest extends PHPUnit_Framework_TestCase
+class ConstSamplerTest extends TestCase
 {
     /**
      * @author tylerc

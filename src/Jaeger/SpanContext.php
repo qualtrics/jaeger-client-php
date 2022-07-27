@@ -3,6 +3,8 @@
 namespace Jaeger;
 
 use OpenTracing\SpanContext as OTSpanContext;
+use EmptyIterator;
+use Traversable;
 
 final class SpanContext implements OTSpanContext
 {
@@ -50,7 +52,7 @@ final class SpanContext implements OTSpanContext
         // error_log("Generated trace: " . $this->traceIdHigh . "-" . $this->traceIdLow);
     }
 
-    public function getIterator()
+    public function getIterator(): Traversable
     {
         return new EmptyIterator();
     }

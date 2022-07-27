@@ -4,9 +4,9 @@ namespace JaegerTests\Unit\Transport;
 
 use Jaeger\Transport\ZipkinTransport;
 use Jaeger\Thrift\Zipkin;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class ZipkinTransportTest extends PHPUnit_Framework_TestCase
+class ZipkinTransportTest extends TestCase
 {
     /**
      * @author tylerc

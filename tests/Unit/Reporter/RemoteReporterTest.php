@@ -4,15 +4,12 @@ namespace JaegerTests\Unit\Transport;
 
 use Jaeger\Reporter\RemoteReporter;
 use Jaeger\Sampler\ConstSampler;
-use Jaeger\Span;
-use Jaeger\Thrift\Zipkin;
 use Jaeger\Tracer;
-use Jaeger\Transport\Transport;
 use Jaeger\Transport\DummyTransport;
 use OpenTracing\StartSpanOptions;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class RemoteReporterTest extends PHPUnit_Framework_TestCase
+class RemoteReporterTest extends TestCase
 {
     /**
      * @author tylerc
