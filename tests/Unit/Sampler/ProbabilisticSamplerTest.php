@@ -3,9 +3,9 @@
 namespace JaegerTests\Unit\Sampler;
 
 use Jaeger\Sampler\ProbabilisticSampler;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class ProbabilisticSamplerTest extends PHPUnit_Framework_TestCase
+class ProbabilisticSamplerTest extends TestCase
 {
     /**
      * @author tylerc
