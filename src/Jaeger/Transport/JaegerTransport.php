@@ -13,6 +13,7 @@ use Jaeger\Thrift\SpanRefType;
 use Jaeger\Thrift\Tag;
 use Jaeger\Thrift\TagType;
 use OpenTracing\Reference;
+use Thrift\Protocol\TBinaryProtocolAccelerated;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Exception\TTransportException;
 
@@ -29,10 +30,10 @@ final class JaegerTransport implements Transport
     private $process = null;
     private $maxBufferSize = 0;
 
-    public function __construct($address = "127.0.0.1", $port = 5775, $maxBufferSize = 0)
+    public function __construct($address = "127.0.0.1", $port = 5775, $maxBufferSize = 0, bool $binaryProtocol = false)
     {
         $this->transport = new TUDPTransport($address, $port);
-        $p = new TCompactProtocol($this->transport);
+        $p = $binaryProtocol ? new TBinaryProtocolAccelerated($this->transport) : new TCompactProtocol($this->transport);
         $this->client = new AgentClient($p, $p);
 
         $this->maxBufferSize = ($maxBufferSize > 0 ? $maxBufferSize : self::DEFAULT_BUFFER_SIZE);
