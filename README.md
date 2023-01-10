@@ -58,6 +58,9 @@ register_shutdown_function(function() {
 })
 ```
 
+## Testing
+Have docker installed, and run `./test.sh`
+
 ## Instrumentation for Tracing
 
 Since this tracer is fully compliant with the OpenTracing API 1.0, all code instrumentation should only use the API itself, as descriped in the [opentracing-php](https://github.com/opentracing/opentracing-php) documentation.

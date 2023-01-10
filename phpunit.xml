@@ -19,4 +19,9 @@
         timeoutForMediumTests="10"
         timeoutForLargeTests="60"
         verbose="false">
+        <testsuites>
+                <testsuite name="jaeger-client-php">
+                        <directory>./tests</directory>
+                </testsuite>
+        </testsuites>
 </phpunit>
