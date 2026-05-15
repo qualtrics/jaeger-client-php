@@ -49,7 +49,7 @@ final class ZipkinTransport implements Transport
     */
     public function flush()
     {
-        $spans = count($this->buffer);
+        $spans = count($this->spans);
 
         // emit a batch
         $this->client->emitZipkinBatch($this->spans);
@@ -58,7 +58,7 @@ final class ZipkinTransport implements Transport
         $this->transport->flush();
 
         // reset the internal buffer
-        $this->buffer = [];
+        $this->spans = [];
 
         return $spans;
     }
@@ -88,19 +88,7 @@ final class ZipkinTransport implements Transport
                 return pack('J', $value);
 
             case Zipkin\AnnotationType::DOUBLE:
-                if (version_compare(PHP_VERSION, "7.0.15") >= 0) {
-                    return pack('E', $value);
-                } else {
-                    // encode in native endianness
-                    $enc = pack('d', $value);
-
-                    // if we have a little-endian system, reverse the bytes
-                    if (pack('S', 1) == "\x01\x00") {
-                        $enc = strrev($enc);
-                    }
-
-                    return $enc;
-                }
+                return pack('E', $value);
         }
     }
 
