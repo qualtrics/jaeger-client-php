@@ -26,7 +26,7 @@ final class Span implements OTSpan
         return new self($tracer, $operationName, $options);
     }
 
-    private function __construct($tracer, $operationName, StartSpanOptions $options = null)
+    private function __construct($tracer, $operationName, ?StartSpanOptions $options = null)
     {
         $this->tracer = $tracer;
         $this->operationName = $operationName;

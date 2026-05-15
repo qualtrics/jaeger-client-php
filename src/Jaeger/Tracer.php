@@ -111,7 +111,7 @@ final class Tracer implements OTTracer
     public function extract(string $format, $carrier): ?SpanContext
     {
         // TODO(tylerc): Implement this.
-        return SpanContext::createAsDefault();
+        return null;
     }
 
     public function flush(): void
