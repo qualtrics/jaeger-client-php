@@ -21,7 +21,7 @@ class ProbabilisticSampler implements Sampler
         // In practice this turns out to be 2^63 - 1 on a 64-bit system.
         $sampleMax = (int) (mt_getrandmax() << 31 | mt_getrandmax());
 
-        $this->samplingRate = (double) $samplingRate;
+        $this->samplingRate = (float) $samplingRate;
         $this->samplingBoundary = $this->samplingRate * $sampleMax;
     }
 

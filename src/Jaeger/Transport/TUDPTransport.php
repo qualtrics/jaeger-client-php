@@ -32,30 +32,34 @@ class TUDPTransport extends TTransport
         }
     }
 
-    public function isOpen()
+    public function isOpen(): bool
     {
         return $this->socket != null;
     }
 
     // Open does nothing as connection is opened on creation
     // Required to maintain thrift.TTransport interface
-    public function open()
+    public function open(): void
     {
         return;
     }
 
-    public function close()
+    public function close(): void
     {
+        if ($this->socket === null) {
+            return;
+        }
+
         socket_close($this->socket);
         $this->socket = null;
     }
 
-    public function read($len)
+    public function read($len): string
     {
-        // not implemented
+        throw new TTransportException("UDP transport is write-only", TTransportException::UNKNOWN);
     }
 
-    public function write($buf)
+    public function write($buf): void
     {
         // ensure that the data will still fit in a UDP packeg
         if (strlen($this->buffer) + strlen($buf) > self::MAX_UDP_PACKET) {
@@ -66,11 +70,15 @@ class TUDPTransport extends TTransport
         $this->buffer .= $buf;
     }
 
-    public function flush()
+    public function flush(): void
     {
         // no data to send; don't send a packet
         if (strlen($this->buffer) == 0) {
             return;
+        }
+
+        if ($this->socket === null) {
+            throw new TTransportException("cannot flush a closed UDP transport", TTransportException::NOT_OPEN);
         }
 
         // TODO(tylerc): This assumes that the whole buffer successfully sent... I believe
