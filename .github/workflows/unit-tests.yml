@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         php-version: ['8.2', '8.3', '8.4', '8.5']
+        thrift-version: ['0.16.*', '0.22.*', '0.24.*']
 
     steps:
       - name: Checkout
@@ -24,6 +25,9 @@ jobs:
 
       - name: Install dependencies
         run: composer install --ansi --no-interaction --no-progress --prefer-dist
+
+      - name: Select thrift version
+        run: composer update apache/thrift --with "apache/thrift:${{ matrix.thrift-version }}" -W --ansi --no-interaction --no-progress --prefer-dist
 
       - name: Run tests
         run: composer test
